@@ -1,6 +1,6 @@
 # web-crawler
 
-##Overview
+## Overview
 Basic web crawler in Java to visit all pages in a specific site and output the findings to a file.
 
 The web crawler will visit a page based on the following:
@@ -9,21 +9,20 @@ The web crawler will visit a page based on the following:
 * Page is not external
 * Page content type is text/html
 
-##Setup
+## Setup
 ```
 git clone https://github.com/petermatano/web-crawler.git
 cd web-crawler
 mvn package
 ```
 
-##Usage
+## Usage
 Run: 
 ```
 java -jar target/web-crawler-1.0-SNAPSHOT.jar ${url_to_crawl}
 ```
 
 Example:
-
 ```
 java -jar target/web-crawler-1.0-SNAPSHOT.jar https://example.com/
 ```
