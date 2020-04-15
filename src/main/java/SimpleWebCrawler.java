@@ -10,16 +10,18 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SimpleWebCrawler {
 
     private URL site;
-    private Set<String> visitedLinks = new HashSet<>();
-    private Set<String> externalLinks = new HashSet<>();
-    private Set<String> staticContentLinks = new HashSet<>();
-    private Set<String> unprocessedLinks = new HashSet<>();
+    private Set<String> visitedLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
+    private Set<String> externalLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
+    private Set<String> staticContentLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
+    private Set<String> unprocessedLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
 
     public SimpleWebCrawler(String site) throws MalformedURLException {
         this.site = new URL(site);
@@ -34,30 +36,9 @@ public class SimpleWebCrawler {
         if (visitedLinks.add(getLinkHash(link))) {
             try {
                 Elements elements = Jsoup.parse(link, 30000).select("[href], [src]");
-                for (Element element : elements) {
-                    String attributeKey = element.is("[href]") ? "href" : "src";
-                    String attributeValue = element.absUrl(attributeKey);
-                    if (!isValidLink(attributeValue)) {
-                        continue;
-                    }
-                    URL elementLink = new URL(attributeValue);
-                    if (visitedLinks.contains(getLinkHash(elementLink))) {
-                        continue;
-                    }
-                    if (!isSameProtocol(elementLink)) {
-                        continue;
-                    }
-                    if (isExternalLink(elementLink)) {
-                        externalLinks.add(elementLink.toExternalForm());
-                        continue;
-                    }
-                    if (!isHTMLContent(elementLink)) {
-                        staticContentLinks.add(elementLink.toExternalForm());
-                        continue;
-                    }
-                    System.out.println("Crawling next link: " + elementLink.toString());
-                    retrieveLinks(elementLink);
-                }
+                elements.stream()
+                        .parallel()
+                        .forEach(element -> processElement(link, element));
             } catch (Exception e) {
                 unprocessedLinks.add(link.toExternalForm());
             }
@@ -91,6 +72,36 @@ public class SimpleWebCrawler {
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+
+    private void processElement(URL parentLink, Element element) {
+        try {
+            String attributeKey = element.is("[href]") ? "href" : "src";
+            String attributeValue = element.absUrl(attributeKey);
+            if (!isValidLink(attributeValue)) {
+                return;
+            }
+            URL elementLink = new URL(attributeValue);
+            if (visitedLinks.contains(getLinkHash(elementLink))) {
+                return;
+            }
+            if (!isSameProtocol(elementLink)) {
+                return;
+            }
+            if (isExternalLink(elementLink)) {
+                externalLinks.add(elementLink.toExternalForm());
+                return;
+            }
+            if (!isHTMLContent(elementLink)) {
+                staticContentLinks.add(elementLink.toExternalForm());
+                return;
+            }
+            System.out.println("Crawling next link: " + elementLink.toString());
+            retrieveLinks(elementLink);
+        } catch (Exception e) {
+            unprocessedLinks.add(parentLink.toExternalForm());
         }
     }
 
