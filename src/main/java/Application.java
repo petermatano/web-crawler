@@ -10,11 +10,11 @@ public class Application {
         }
 
         String site = args[0];
-        String externalLinkFilter = null;
+        String linkFilter = null;
         if (args.length == 2) {
-            externalLinkFilter = args[1];
+            linkFilter = args[1];
         }
-        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler(site, externalLinkFilter);
+        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler(site, linkFilter);
         Instant start = Instant.now();
         simpleWebCrawler.crawlSite();
         long timeElapsedInMillis = Duration.between(start, Instant.now()).toMillis();

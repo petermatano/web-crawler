@@ -12,12 +12,12 @@ public class SimpleWebCrawlerTest {
 
     @Test(expected = MalformedURLException.class)
     public void invalidSite() throws Exception {
-        new SimpleWebCrawler("invalid-url");
+        new SimpleWebCrawler("invalid-url", null);
     }
 
     @Test
     public void isExternalLink() throws MalformedURLException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler("https://google.com");
+        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler("https://google.com", null);
         Method method = SimpleWebCrawler.class.getDeclaredMethod("isExternalLink", URL.class);
         method.setAccessible(true);
         boolean isExternal = (boolean) method.invoke(simpleWebCrawler, new URL("https://some.other.site.com"));
@@ -26,7 +26,7 @@ public class SimpleWebCrawlerTest {
 
     @Test
     public void isNotExternalLink() throws MalformedURLException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler("https://google.com");
+        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler("https://google.com", null);
         Method method = SimpleWebCrawler.class.getDeclaredMethod("isExternalLink", URL.class);
         method.setAccessible(true);
         boolean isExternal = (boolean) method.invoke(simpleWebCrawler, new URL("https://google.com"));
@@ -35,7 +35,7 @@ public class SimpleWebCrawlerTest {
 
     @Test
     public void isValidLink() throws MalformedURLException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler("https://google.com");
+        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler("https://google.com", null);
         Method method = SimpleWebCrawler.class.getDeclaredMethod("isValidLink", String.class);
         method.setAccessible(true);
         boolean isValid = (boolean) method.invoke(simpleWebCrawler, "https://some.other.site.com");
@@ -44,7 +44,7 @@ public class SimpleWebCrawlerTest {
 
     @Test
     public void isNotValidLink() throws MalformedURLException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler("https://google.com");
+        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler("https://google.com", null);
         Method method = SimpleWebCrawler.class.getDeclaredMethod("isValidLink", String.class);
         method.setAccessible(true);
         boolean isValid = (boolean) method.invoke(simpleWebCrawler, "invalid-site");

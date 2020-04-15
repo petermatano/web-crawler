@@ -17,29 +17,30 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SimpleWebCrawler {
 
     private URL site;
-    private String externalLinkFilter;
+    private String linkFilter;
     private Set<String> visitedLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
     private Set<String> externalLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
+    private Set<String> filteredLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
     private Set<String> staticContentLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
     private Set<String> unprocessedLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
 
-    public SimpleWebCrawler(String site, String externalLinkFilter) throws MalformedURLException {
+    public SimpleWebCrawler(String site, String linkFilter) throws MalformedURLException {
         this.site = new URL(site);
-        this.externalLinkFilter = externalLinkFilter;
+        this.linkFilter = linkFilter;
     }
 
     public void crawlSite() {
-        System.out.println("Crawling the following site: " + this.site.toString());
-        retrieveLinks(this.site);
+        System.out.println("Crawling the following site: " + this.site.toString() + " - Link filter: " + this.linkFilter);
+        retrieveLinks(this.site, this.linkFilter);
     }
 
-    private void retrieveLinks(URL link) {
+    private void retrieveLinks(URL link, String linkFilter) {
         if (visitedLinks.add(getLinkHash(link))) {
             try {
                 Elements elements = Jsoup.parse(link, 30000).select("[href], [src]");
                 elements.stream()
                         .parallel()
-                        .forEach(element -> processElement(link, element));
+                        .forEach(element -> processElement(link, element, linkFilter));
             } catch (Exception e) {
                 unprocessedLinks.add(link.toExternalForm());
             }
@@ -77,7 +78,7 @@ public class SimpleWebCrawler {
     }
 
 
-    private void processElement(URL parentLink, Element element) {
+    private void processElement(URL parentLink, Element element, String linkFilter) {
         try {
             String attributeKey = element.is("[href]") ? "href" : "src";
             String attributeValue = element.absUrl(attributeKey);
@@ -93,9 +94,10 @@ public class SimpleWebCrawler {
             }
             if (isExternalLink(elementLink)) {
                 String linkExternalForm = elementLink.toExternalForm();
-                if (externalLinkFilter != null && linkExternalForm.toLowerCase().contains(externalLinkFilter.toLowerCase())) {
-                    externalLinks.add(linkExternalForm);
+                if (linkFilter != null && linkExternalForm.toLowerCase().contains(linkFilter.toLowerCase())) {
+                    filteredLinks.add(linkExternalForm);
                 }
+                externalLinks.add(linkExternalForm);
                 return;
             }
             if (!isHTMLContent(elementLink)) {
@@ -103,7 +105,7 @@ public class SimpleWebCrawler {
                 return;
             }
             System.out.println("Crawling next link: " + elementLink.toString());
-            retrieveLinks(elementLink);
+            retrieveLinks(elementLink, linkFilter);
         } catch (Exception e) {
             unprocessedLinks.add(parentLink.toExternalForm());
         }
@@ -111,6 +113,7 @@ public class SimpleWebCrawler {
 
     public void printSummary() {
         System.out.println("Links Visited Total: " + visitedLinks.size());
+        System.out.println("Filtered Links Total: " + filteredLinks.size());
         System.out.println("External Links Total: " + externalLinks.size());
         System.out.println("Static Content Links Total: " + staticContentLinks.size());
         System.out.println("Unprocessed Links Total: " + unprocessedLinks.size());
@@ -122,6 +125,13 @@ public class SimpleWebCrawler {
             writer.write("****** Links Visited Total: " + visitedLinks.size() + " ******");
             writer.newLine();
             for (String s : visitedLinks) {
+                writer.write(s);
+                writer.newLine();
+            }
+            writer.newLine();
+            writer.write("****** Filtered Links Total: " + filteredLinks.size() + " ******");
+            writer.newLine();
+            for (String s : filteredLinks) {
                 writer.write(s);
                 writer.newLine();
             }
