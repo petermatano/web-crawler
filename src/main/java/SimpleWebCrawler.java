@@ -11,20 +11,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SimpleWebCrawler {
 
     private URL site;
+    private String externalLinkFilter;
     private Set<String> visitedLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
     private Set<String> externalLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
     private Set<String> staticContentLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
     private Set<String> unprocessedLinks = Collections.newSetFromMap(new ConcurrentHashMap<>()); //new HashSet<>();
 
-    public SimpleWebCrawler(String site) throws MalformedURLException {
+    public SimpleWebCrawler(String site, String externalLinkFilter) throws MalformedURLException {
         this.site = new URL(site);
+        this.externalLinkFilter = externalLinkFilter;
     }
 
     public void crawlSite() {
@@ -91,7 +92,10 @@ public class SimpleWebCrawler {
                 return;
             }
             if (isExternalLink(elementLink)) {
-                externalLinks.add(elementLink.toExternalForm());
+                String linkExternalForm = elementLink.toExternalForm();
+                if (externalLinkFilter != null && linkExternalForm.toLowerCase().contains(externalLinkFilter.toLowerCase())) {
+                    externalLinks.add(linkExternalForm);
+                }
                 return;
             }
             if (!isHTMLContent(elementLink)) {

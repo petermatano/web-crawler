@@ -4,13 +4,17 @@ import java.time.Instant;
 public class Application {
 
     public static void main(String[] args) throws Exception {
-        if (args == null || args.length != 1) {
+        if (args == null || args.length < 2) {
             System.out.println("Please provide site to crawl");
             System.exit(1);
         }
 
         String site = args[0];
-        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler(site);
+        String externalLinkFilter = null;
+        if (args.length == 2) {
+            externalLinkFilter = args[1];
+        }
+        SimpleWebCrawler simpleWebCrawler = new SimpleWebCrawler(site, externalLinkFilter);
         Instant start = Instant.now();
         simpleWebCrawler.crawlSite();
         long timeElapsedInMillis = Duration.between(start, Instant.now()).toMillis();
